@@ -218,7 +218,7 @@ Edemy LMS is a full-featured Learning Management System built with the MERN stac
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/yourusername/edemy-lms.git
+   git clone https://github.com/TejasSavla663/LMS.git
    cd edemy-lms
    ```
 
