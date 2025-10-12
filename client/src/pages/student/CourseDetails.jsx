@@ -357,14 +357,29 @@ const CourseDetails = () => {
 export default CourseDetails;
 
 const getYouTubeVideoId = (url) => {
-  if (!url) return '';
-  const urlObj = new URL(url);
-  if (urlObj.hostname === 'youtu.be') {
-    return urlObj.pathname.slice(1);
+  try {
+    if (!url) return '';
+    
+    // Handle youtu.be URLs
+    if (url.includes('youtu.be/')) {
+      const id = url.split('youtu.be/')[1];
+      return id.split('?')[0];
+    }
+    
+    // Handle youtube.com URLs
+    if (url.includes('youtube.com/watch')) {
+      const urlObj = new URL(url);
+      return urlObj.searchParams.get('v') || '';
+    }
+    
+    // Handle direct video IDs
+    if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
+      return url;
+    }
+    
+    return '';
+  } catch (error) {
+    console.error('Error parsing YouTube URL:', error);
+    return '';
   }
-  if (urlObj.hostname.includes('youtube.com')) {
-    const searchParams = new URLSearchParams(urlObj.search);
-    return searchParams.get('v');
-  }
-  return '';
 };
