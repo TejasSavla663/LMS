@@ -342,7 +342,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - GitHub: [@TejasSavla663](https://github.com/TejasSavla663)
 
 ## 📞 Contact & Support
-- WhatsApp: [Click to Chat](https://wa.me/xxxxxxxx)
+- WhatsApp: [Click to Chat](https://wa.me/xxxxxxxxx)
 
 - Give this project a ⭐ if you found it helpful!
 
