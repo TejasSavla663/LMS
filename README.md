@@ -16,7 +16,7 @@
 Edemy LMS is a full-featured Learning Management System built with the MERN stack (MongoDB, Express.js, React, Node.js). It provides a seamless platform for educators to create and manage courses, and for students to learn through an intuitive interface.
 
 ### 🔥 Live Demo
-- Frontend: [https://edemy-lms.vercel.app](https://lms-frontend-amber-sigma.vercel.app/)
+- Frontend: [https://lms-frontend-amber-sigma.vercel.app/](https://lms-frontend-amber-sigma.vercel.app/)
 - Backend API: [https://lms-backend-chi-henna.vercel.app](https://lms-backend-chi-henna.vercel.app)
 
 ## 🏗️ System Architecture
