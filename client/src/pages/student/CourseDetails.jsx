@@ -187,7 +187,7 @@ const CourseDetails = () => {
 														<img
 															onClick={() =>
 																setPlayerData({
-																	videoId: lecture.lectureUrl.split("/").pop(),
+																	videoId: getYouTubeVideoId(lecture.lectureUrl),
 																})
 															}
 															className="w-4 h-4 mt-1 cursor-pointer"
@@ -209,9 +209,7 @@ const CourseDetails = () => {
 																<p
 																	onClick={() =>
 																		setPlayerData({
-																			videoId: lecture.lectureUrl
-																				.split("/")
-																				.pop(),
+																			videoId: getYouTubeVideoId(lecture.lectureUrl),
 																		})
 																	}
 																	className="text-blue-500 cursor-pointer"
@@ -357,3 +355,16 @@ const CourseDetails = () => {
 };
 
 export default CourseDetails;
+
+const getYouTubeVideoId = (url) => {
+  if (!url) return '';
+  const urlObj = new URL(url);
+  if (urlObj.hostname === 'youtu.be') {
+    return urlObj.pathname.slice(1);
+  }
+  if (urlObj.hostname.includes('youtube.com')) {
+    const searchParams = new URLSearchParams(urlObj.search);
+    return searchParams.get('v');
+  }
+  return '';
+};
