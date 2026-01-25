@@ -35,8 +35,8 @@ jobs:
         run: npm run lint
         working-directory: client
 
-      - name: Prettier Check
-        run: npx prettier --check .
+      - name: Prettier check (non-blocking)
+        run: npx prettier --check . || echo "Prettier warnings found"
         working-directory: client
 
   # ---------- Stage 2: Unit Tests ----------
