@@ -1,0 +1,23 @@
+name: Lighthouse CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * 1"   # every Monday 9 AM
+
+jobs:
+  lighthouse:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.10.x
+
+      - name: Run Lighthouse Audit
+        run: |
+          lhci autorun \
+            --collect.url=https://lms-frontend-amber-sigma.vercel.app/ \
+            --collect.numberOfRuns=3 \
+            --collect.settings.emulatedFormFactor=desktop \
+            --upload.target=filesystem
