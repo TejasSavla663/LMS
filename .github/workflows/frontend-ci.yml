@@ -1,0 +1,115 @@
+name: Frontend CI Pipeline
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "client/**"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "client/**"
+
+jobs:
+  # ---------- Stage 1: Lint + Prettier ----------
+  lint:
+    name: Lint & Prettier
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: client
+
+      - name: ESLint
+        run: npm run lint
+        working-directory: client
+
+      - name: Prettier Check
+        run: npx prettier --check .
+        working-directory: client
+
+  # ---------- Stage 2: Unit Tests ----------
+  test:
+    name: Vitest Tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: client
+
+      - name: Run Tests
+        run: npx vitest run --reporter=dot --passWithNoTests
+        working-directory: client
+
+  # ---------- Stage 3a: Security Scan ----------
+  codeql:
+    name: CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+      - name: npm audit (warning-only)
+        run: npm audit --audit-level=high || true
+        working-directory: client
+
+  # ---------- Stage 3b: Build Frontend ----------
+  build:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    needs: test   # runs in parallel with CodeQL
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: client
+
+      - name: Build Project
+        run: npm run build
+        working-directory: client
