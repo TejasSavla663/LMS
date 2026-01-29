@@ -13,35 +13,50 @@ pipeline {
 
   stages {
 
-    stage('1️⃣ Checkout Code') {
+    stage('🔍 Check Changes (server only)') {
+      when {
+        anyOf {
+          branch 'jenkins-cicd'
+          branch 'main'
+        }
+      }
       steps {
-        echo "📥 Checking out source code from GitHub..."
-        checkout scm
-        echo "✅ Code checkout completed"
+        echo "🧠 Monorepo detected — CI will run only if server/ changed"
       }
     }
 
-    stage('2️⃣ Install Dependencies & Run Tests') {
+    stage('📥 Checkout Code') {
+      when {
+        changeset "server/**"
+      }
+      steps {
+        echo "📥 Checking out source code..."
+        checkout scm
+        echo "✅ Checkout completed"
+      }
+    }
+
+    stage('📦 Install Dependencies & Tests') {
+      when {
+        changeset "server/**"
+      }
       steps {
         dir('server') {
-          echo "📦 Installing Node.js dependencies..."
+          echo "📦 Installing dependencies..."
           sh 'npm ci'
-          echo "✅ Dependencies installed successfully"
+          echo "✅ Dependencies installed"
 
-          echo "🧪 Running unit tests (optional)..."
-          sh '''
-          if npm test; then
-            echo "✅ Tests passed"
-          else
-            echo "⚠️ Tests failed or not configured — continuing CI"
-          fi
-          '''
-          echo "✅ Test stage finished"
+          echo "🧪 Running tests (optional)..."
+          sh 'npm test || echo "⚠️ No tests / tests skipped"'
+          echo "✅ Test stage done"
         }
       }
     }
 
-    stage('3️⃣ SonarQube Code Scan') {
+    stage('🔍 SonarQube Scan') {
+      when {
+        changeset "server/**"
+      }
       steps {
         echo "🔍 Starting SonarQube scan..."
         withSonarQubeEnv('sonarqube') {
@@ -50,6 +65,7 @@ pipeline {
               sh """
               ${SONAR_SCANNER_HOME}/bin/sonar-scanner \
               -Dsonar.projectKey=lms-backend-server \
+              -Dsonar.projectName=lms-backend-server \
               -Dsonar.sources=. \
               -Dsonar.host.url=http://172.17.0.1:9000 \
               -Dsonar.login=${SONAR_TOKEN}
@@ -57,23 +73,29 @@ pipeline {
             }
           }
         }
-        echo "✅ SonarQube scan completed"
+        echo "✅ Sonar scan completed"
       }
     }
 
-    stage('4️⃣ Build Docker Image') {
+    stage('🐳 Build Docker Image') {
+      when {
+        changeset "server/**"
+      }
       steps {
         dir('server') {
           echo "🐳 Building Docker image..."
           sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-          echo "✅ Docker image built: ${DOCKER_IMAGE}:${DOCKER_TAG}"
+          echo "✅ Image built: ${DOCKER_IMAGE}:${DOCKER_TAG}"
         }
       }
     }
 
-    stage('5️⃣ Trivy Image Security Scan') {
+    stage('🛡️ Trivy Scan') {
+      when {
+        changeset "server/**"
+      }
       steps {
-        echo "🛡️ Running Trivy vulnerability scan..."
+        echo "🛡️ Running Trivy scan..."
         sh """
         docker run --rm \
           -v /var/run/docker.sock:/var/run/docker.sock \
@@ -83,9 +105,12 @@ pipeline {
       }
     }
 
-    stage('6️⃣ Push Image to DockerHub') {
+    stage('📤 Push to DockerHub') {
+      when {
+        changeset "server/**"
+      }
       steps {
-        echo "📤 Logging into DockerHub..."
+        echo "📤 Pushing image to DockerHub..."
         withCredentials([usernamePassword(
           credentialsId: 'dockerhub-creds',
           usernameVariable: 'DOCKER_USER',
@@ -96,27 +121,20 @@ pipeline {
           docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
           """
         }
-        echo "🚀 Docker image pushed to DockerHub successfully"
-      }
-    }
-
-    stage('7️⃣ GitOps / CD (Next Step)') {
-      steps {
-        echo "📝 Helm / ArgoCD update will be handled in CD pipeline"
-        echo "⏭️ Skipping for now"
+        echo "🚀 Image pushed successfully"
       }
     }
   }
 
   post {
     success {
-      echo "🎉 CI PIPELINE COMPLETED SUCCESSFULLY!"
+      echo "🎉 CI PIPELINE COMPLETED SUCCESSFULLY"
     }
     failure {
-      echo "❌ CI PIPELINE FAILED — Check logs above"
+      echo "❌ CI PIPELINE FAILED — Check logs"
     }
     always {
-      echo "🧹 Pipeline execution finished"
+      echo "🧹 Pipeline finished"
     }
   }
 }
