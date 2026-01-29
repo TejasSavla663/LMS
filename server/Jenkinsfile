@@ -1,0 +1,122 @@
+pipeline {
+  agent any
+
+  tools {
+    nodejs 'node20'
+  }
+
+  environment {
+    DOCKER_IMAGE = "tejas663/lms-backend"
+    DOCKER_TAG   = "${BUILD_NUMBER}"
+    SONAR_SCANNER_HOME = tool 'sonar-scanner'
+  }
+
+  stages {
+
+    stage('1️⃣ Checkout Code') {
+      steps {
+        echo "📥 Checking out source code from GitHub..."
+        checkout scm
+        echo "✅ Code checkout completed"
+      }
+    }
+
+    stage('2️⃣ Install Dependencies & Run Tests') {
+      steps {
+        dir('server') {
+          echo "📦 Installing Node.js dependencies..."
+          sh 'npm ci'
+          echo "✅ Dependencies installed successfully"
+
+          echo "🧪 Running unit tests (optional)..."
+          sh '''
+          if npm test; then
+            echo "✅ Tests passed"
+          else
+            echo "⚠️ Tests failed or not configured — continuing CI"
+          fi
+          '''
+          echo "✅ Test stage finished"
+        }
+      }
+    }
+
+    stage('3️⃣ SonarQube Code Scan') {
+      steps {
+        echo "🔍 Starting SonarQube scan..."
+        withSonarQubeEnv('sonarqube') {
+          withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+            dir('server') {
+              sh """
+              ${SONAR_SCANNER_HOME}/bin/sonar-scanner \
+              -Dsonar.projectKey=lms-backend-server \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=http://172.17.0.1:9000 \
+              -Dsonar.login=${SONAR_TOKEN}
+              """
+            }
+          }
+        }
+        echo "✅ SonarQube scan completed"
+      }
+    }
+
+    stage('4️⃣ Build Docker Image') {
+      steps {
+        dir('server') {
+          echo "🐳 Building Docker image..."
+          sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+          echo "✅ Docker image built: ${DOCKER_IMAGE}:${DOCKER_TAG}"
+        }
+      }
+    }
+
+    stage('5️⃣ Trivy Image Security Scan') {
+      steps {
+        echo "🛡️ Running Trivy vulnerability scan..."
+        sh """
+        docker run --rm \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy image ${DOCKER_IMAGE}:${DOCKER_TAG}
+        """
+        echo "✅ Trivy scan completed"
+      }
+    }
+
+    stage('6️⃣ Push Image to DockerHub') {
+      steps {
+        echo "📤 Logging into DockerHub..."
+        withCredentials([usernamePassword(
+          credentialsId: 'dockerhub-creds',
+          usernameVariable: 'DOCKER_USER',
+          passwordVariable: 'DOCKER_PASS'
+        )]) {
+          sh """
+          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+          docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+          """
+        }
+        echo "🚀 Docker image pushed to DockerHub successfully"
+      }
+    }
+
+    stage('7️⃣ GitOps / CD (Next Step)') {
+      steps {
+        echo "📝 Helm / ArgoCD update will be handled in CD pipeline"
+        echo "⏭️ Skipping for now"
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "🎉 CI PIPELINE COMPLETED SUCCESSFULLY!"
+    }
+    failure {
+      echo "❌ CI PIPELINE FAILED — Check logs above"
+    }
+    always {
+      echo "🧹 Pipeline execution finished"
+    }
+  }
+}

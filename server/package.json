@@ -4,8 +4,8 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
+    "test": "jest",
+    "start": "node index.js",
     "server": "nodemon server.js"
   },
   "keywords": [],
@@ -23,5 +23,9 @@
     "nodemon": "^3.1.9",
     "stripe": "^17.6.0",
     "svix": "^1.42.0"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "supertest": "^7.2.2"
   }
 }
