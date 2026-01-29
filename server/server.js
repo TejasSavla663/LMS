@@ -61,3 +61,5 @@ app.listen(PORT, ()=> {
     console.log(`Server is running on ${PORT}`);
     
 })
+// server/server.js
+console.log("Triggered CI from server change");
