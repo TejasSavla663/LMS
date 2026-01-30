@@ -9,6 +9,10 @@ pipeline {
     DOCKER_IMAGE = "tejas663/lms-backend"
     DOCKER_TAG   = "${BUILD_NUMBER}"
     SONAR_SCANNER_HOME = tool 'sonar-scanner'
+
+    // 🔥 ADDITION (GitOps repo)
+    GITOPS_REPO = "https://github.com/TejasSavla663/lms-cd-gitops.git"
+    HELM_PATH   = "helm/lms-backend"
   }
 
   stages {
@@ -122,6 +126,33 @@ pipeline {
           """
         }
         echo "🚀 Image pushed successfully"
+      }
+    }
+
+    // 🔥🔥 ONLY NEW STAGE ADDED 🔥🔥
+    stage('📝 Update Helm values.yaml (GitOps)') {
+      when {
+        changeset "server/**"
+      }
+      steps {
+        echo "📝 Updating Helm image tag for ArgoCD..."
+
+        sh """
+        rm -rf gitops
+        git clone ${GITOPS_REPO} gitops
+        cd gitops/${HELM_PATH}
+
+        sed -i 's/tag:.*/tag: "${DOCKER_TAG}"/' values.yaml
+
+        git config user.email "jenkins@ci.com"
+        git config user.name "jenkins"
+
+        git add values.yaml
+        git commit -m "chore: update backend image to ${DOCKER_TAG}"
+        git push
+        """
+
+        echo "✅ Helm values updated — ArgoCD will sync automatically"
       }
     }
   }
