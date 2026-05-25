@@ -18,6 +18,7 @@ Edemy LMS is a full-featured Learning Management System built with the MERN stac
 ### 🔥 Live Demo
 - Frontend: [https://lms-frontend-amber-sigma.vercel.app/](https://lms-frontend-amber-sigma.vercel.app/)
 - Backend API: [https://lms-backend-chi-henna.vercel.app](https://lms-backend-chi-henna.vercel.app)
+- DevSecOps & Infrastructure : [https://github.com/TejasSavla663/lms-cd-gitops.git](https://github.com/TejasSavla663/lms-cd-gitops.git)
 
 ## 🏗️ System Architecture
 

@@ -19,7 +19,10 @@ await connectCloudinay();
 
 
 // middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+}));
 
 // Webhook raw body logging middleware
 const logWebhookBody = (req, res, next) => {
